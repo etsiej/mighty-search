@@ -1,0 +1,40 @@
+name: Track prices
+
+on:
+  schedule:
+    # GitHub cron is UTC and ignores daylight saving: 12:00 UTC = 1am NZDT (Sep-Apr), midnight NZST (Apr-Sep).
+    - cron: '0 12 * * *'
+  workflow_dispatch: # run it by hand from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: track-prices
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test
+        run: npm test
+      - name: Record today's prices
+        run: node scripts/track-prices.mjs
+      - name: Commit changes
+        run: |
+          git config user.name "price-tracker"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then
+            echo "No price changes."
+          else
+            git commit -m "Update prices $(node -p "require('./data/history/meta.json').lastRun")"
+            git pull --rebase origin main
+            git push
+          fi

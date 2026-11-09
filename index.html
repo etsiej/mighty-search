@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mighty Search</title>
+    <meta name="description" content="Unofficial hardware and building-supplies search for New Zealand: browse by department, check stock at your store, and see tracked price history. Prices are indicative only.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 rx=%2710%27 fill=%27%23E8590C%27/%3E%3Ccircle cx=%2718%27 cy=%2718%27 r=%278%27 fill=%27none%27 stroke=%27white%27 stroke-width=%273.2%27/%3E%3Cpath d=%27M24 24l8 8%27 stroke=%27white%27 stroke-width=%273.2%27 stroke-linecap=%27round%27/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css?v=13">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                    <rect width="40" height="40" rx="10" class="logo-bg"/>
+                    <circle cx="18" cy="18" r="8" stroke="#fff" stroke-width="3.2"/>
+                    <path d="M24 24l8 8" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+                </svg>
+                <span>Mighty Search</span>
+            </div>
+            <div class="search-container">
+                <div class="search-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search for products..." autocomplete="off">
+                    <button id="clearBtn" class="clear-btn" style="display:none;">&times;</button>
+                </div>
+            </div>
+            <div class="store-picker" id="storePicker">
+                <button type="button" id="storeBtn" class="store-btn" aria-haspopup="listbox" aria-expanded="false">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>
+                    </svg>
+                    <span id="storeLabel">Choose store</span>
+                </button>
+                <div class="store-panel" id="storePanel" hidden>
+                    <input type="search" id="storeSearch" placeholder="Search by store or town" autocomplete="off" aria-label="Search stores">
+                    <ul id="storeList" role="listbox" aria-label="Stores"></ul>
+                    <button type="button" id="storeClear" class="store-clear" hidden>Clear my store</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Search Results View -->
+        <div id="resultsView" class="view" style="display:none;">
+            <div class="results-layout">
+                <aside class="filter-sidebar" id="filterSidebar">
+                    <div class="filter-section">
+                        <div class="filter-section-header">
+                            <h3>Brands</h3>
+                            <button id="clearBrands" class="clear-filters-btn" style="display:none;">Clear</button>
+                        </div>
+                        <div id="brandList" class="brand-list"></div>
+                    </div>
+                    <div class="filter-section">
+                        <div class="filter-section-header">
+                            <h3>Categories</h3>
+                            <button id="clearCategories" class="clear-filters-btn" style="display:none;">Clear</button>
+                        </div>
+                        <div id="categoryTree" class="category-tree"></div>
+                    </div>
+                    <button type="button" id="filtersDone" class="filters-done">Show products</button>
+                </aside>
+                <div class="results-main">
+                    <div class="results-header">
+                        <div class="results-info">
+                            <nav id="breadcrumb" class="breadcrumb" aria-label="Breadcrumb"></nav>
+                            <h2 id="resultsTitle">Search Results</h2>
+                            <span id="resultsCount" class="results-count"></span>
+                            <span id="stockAsOf" class="results-count"></span>
+                        </div>
+                        <button type="button" id="filterToggle" class="filter-toggle" aria-expanded="false" aria-controls="filterSidebar">Filters &amp; categories</button>
+                        <div class="results-filters">
+                            <select id="sortSelect" class="filter-select">
+                                <option value="relevance">Sort by: Relevance</option>
+                                <option value="price_asc">Price: Low to High</option>
+                                <option value="price_desc">Price: High to Low</option>
+                            </select>
+                            <div class="filter-group">
+                                <label class="filter-label">
+                                    <input type="checkbox" id="filterNationwide"> Nationwide
+                                </label>
+                                <label class="filter-label" id="inStockLabel">
+                                    <input type="checkbox" id="filterInStock"> In stock at my store
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="resultsGrid" class="results-grid"></div>
+                    <div id="loadMoreContainer" class="load-more-container" style="display:none;">
+                        <button id="loadMoreBtn" class="btn-load-more">Load More Results</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Detail View -->
+        <div id="productView" class="view" style="display:none;">
+            <div class="product-nav">
+                <button id="backBtn" class="btn-back">&larr; Back</button>
+                <nav id="productBreadcrumb" class="breadcrumb" aria-label="Breadcrumb"></nav>
+            </div>
+            <div class="product-detail" id="productDetail"></div>
+        </div>
+
+        <!-- Home -->
+        <div id="emptyState" class="home">
+            <div class="home-hero">
+                <h2>Find hardware, tools and building supplies</h2>
+                <p>Search above, or browse a department. Choose your store to see what's in stock.</p>
+            </div>
+            <section id="dealsHome" class="deals-home" aria-labelledby="dealsHeading" hidden>
+                <div class="section-head">
+                    <h3 id="dealsHeading">Latest deals</h3>
+                    <div class="section-actions">
+                        <button type="button" id="seeAllDeals" class="btn-link"></button>
+                        <div class="strip-arrows">
+                            <button type="button" class="strip-arrow" id="dealsPrev" aria-label="Scroll deals left">&#8249;</button>
+                            <button type="button" class="strip-arrow" id="dealsNext" aria-label="Scroll deals right">&#8250;</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="dealsStrip" class="deals-strip" tabindex="0" aria-label="Latest deals, scroll sideways"></div>
+                <p class="deals-note">A deal is a promo price below the list price. Prices are tracked daily but are indicative only: confirm with the store before you buy.</p>
+            </section>
+            <section id="departments" class="departments" aria-labelledby="departmentsHeading" hidden>
+                <h3 id="departmentsHeading">Shop by department</h3>
+                <div id="departmentGrid" class="department-grid"></div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p><strong>Prices and stock are indicative only.</strong> They may be wrong or out of date, must not be relied on or reused, and should always be confirmed with the store.</p>
+        <p>Unofficial tool, not affiliated with or endorsed by Mitre 10 (New Zealand) Limited. Your searches go straight from your browser to Algolia, the search provider the retailer uses. <a href="about.html">Privacy, disclaimer &amp; about</a></p>
+    </footer>
+
+    <script type="module" src="app.js?v=14"></script>
+</body>
+</html>

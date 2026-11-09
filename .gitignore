@@ -1,0 +1,4 @@
+node_modules/
+.scratch/
+data/stores-source.json
+.shots/
